@@ -26,7 +26,23 @@ function Companies() {
 
   const loadCompanies = async () => {
     try {
-      const result = await query('SELECT * FROM companies ORDER BY company_code')
+      // Build companies query using user.company when present. If user.company is an empty array, return all enabled companies.
+      let companiesQuery = 'SELECT * FROM companies'
+      if (user) {
+        const companiesArr = Array.isArray(user.company) ? user.company : (user.company ? [user.company] : [])
+        if (companiesArr.length > 0) {
+          const companyList = companiesArr.map(c => `'${String(c).replace(/'/g, "''")}'`).join(', ')
+          console.debug('Companies filter companyList:', companyList)
+          companiesQuery += ` WHERE company_code IN (${companyList}) AND enabled = 1`
+        } else {
+          companiesQuery += ' WHERE enabled = 1'
+        }
+      } else {
+        companiesQuery += ' WHERE enabled = 1'
+      }
+      companiesQuery += ' ORDER BY company_code'
+
+      const result = await query(companiesQuery)
       setCompanies(result.data || [])
     } catch (error) {
       console.error('Error loading companies:', error)

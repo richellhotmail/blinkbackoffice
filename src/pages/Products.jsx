@@ -82,13 +82,13 @@ function Products() {
       console.log('Products query:', productsQuery);
       const [productsResult, companiesResult, productGroupsResult] = await Promise.all([
         query(productsQuery),
-        query('SELECT * FROM companies WHERE enabled = 1 ORDER BY company_code'),
-        query('SELECT * FROM product_groups WHERE enabled = 1 ORDER BY prod_grp_code')
+        // query('SELECT * FROM companies WHERE enabled = 1 ORDER BY company_code'),
+        // query('SELECT * FROM product_groups WHERE enabled = 1 ORDER BY prod_grp_code')
       ])
       
       setProducts(productsResult.data || [])
-      setCompanies(companiesResult.data || [])
-      setProductGroups(productGroupsResult.data || [])
+      // setCompanies(companiesResult.data || [])
+      // setProductGroups(productGroupsResult.data || [])
     } catch (error) {
       console.error('Error loading data:', error)
     } finally {
