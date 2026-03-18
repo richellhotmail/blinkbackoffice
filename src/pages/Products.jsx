@@ -34,11 +34,30 @@ function Products() {
   })
   const [codeError, setCodeError] = useState('')
 
+  // Determine which companies the current user can see/select.
+  const allowedCompanies = (() => {
+    if (user && Array.isArray(user.company) && user.company.length > 0) {
+      return companies.filter((c) => user.company.includes(c.company_code))
+    }
+    return companies
+  })()
+
+  // If there's only one allowed company (or company not set), default the form to it.
+  useEffect(() => {
+    if (allowedCompanies.length === 1) {
+      setFormData(prev => ({ ...prev, company_code: allowedCompanies[0].company_code }))
+    } else if (!formData.company_code && allowedCompanies.length > 0) {
+      setFormData(prev => ({ ...prev, company_code: allowedCompanies[0].company_code }))
+    }
+  }, [allowedCompanies])
+
   useEffect(() => {
     if (!authLoading) loadData()
   }, [authLoading, user])
 
   const loadData = async () => {
+          console.debug('Products query:');
+
     try {
       // Build products query and filter by user's companies when not admin
       let productsQuery = `SELECT p.*, c.company_short_desc, pg.prod_grp_short_desc 
@@ -46,15 +65,21 @@ function Products() {
                LEFT JOIN companies c ON p.company_code = c.company_code 
                LEFT JOIN product_groups pg ON p.prod_grp_code = pg.prod_grp_code`
 
-      if (user && user.role !== 'admin') {
+      // Apply company filter only when the user's `company` contains entries.
+      // If `user.company` is an empty array, show products for all companies.
+            console.debug('Products query:', productsQuery);
+
+      if (user) {
+        console.log('User company info:', user);
         const companiesArr = Array.isArray(user.company) ? user.company : (user.company ? [user.company] : [])
         if (companiesArr.length > 0) {
           const companyList = companiesArr.map(c => `'${String(c).replace(/'/g, "''")}'`).join(', ')
+          console.debug('Products filter companyList:', companyList)
           productsQuery += ` WHERE p.company_code IN (${companyList})`
-        }
+        } 
       }
       productsQuery += ` ORDER BY p.product_code`
-
+      console.log('Products query:', productsQuery);
       const [productsResult, companiesResult, productGroupsResult] = await Promise.all([
         query(productsQuery),
         query('SELECT * FROM companies WHERE enabled = 1 ORDER BY company_code'),
@@ -179,7 +204,7 @@ function Products() {
       product_short_desc: '',
       product_long_desc: '',
       prod_grp_code: productGroups[0]?.prod_grp_code || '',
-      company_code: companies[0]?.company_code || '',
+      company_code: allowedCompanies[0]?.company_code || companies[0]?.company_code || '',
       price_zone_1: 0,
       price_zone_2: 0,
       price_zone_3: 0,
@@ -363,8 +388,7 @@ function Products() {
                       value={formData.company_code}
                       onChange={(e) => setFormData({...formData, company_code: e.target.value})}
                     >
-                      <option value="">Select Company</option>
-                      {companies.map(company => (
+                      {allowedCompanies.map(company => (
                         <option key={company.company_code} value={company.company_code}>
                           {company.company_code} - {company.company_short_desc}
                         </option>

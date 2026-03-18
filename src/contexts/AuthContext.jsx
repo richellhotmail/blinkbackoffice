@@ -31,7 +31,7 @@ export function AuthProvider({ children }) {
         username: 'admin',
         role: 'admin',
         name: 'Administrator',
-        company: ['01', '02'] // Example company IDs for admin
+        company: [] // Example company IDs for admin
       }
       setUser(userData)
       localStorage.setItem('user', JSON.stringify(userData))
@@ -53,7 +53,7 @@ export function AuthProvider({ children }) {
         username: 'staff',
         role: 'staff',
         name: 'Staff Member',
-        company: ['01', '02'] // Example company IDs for staff
+        company: ['01', '02']  // Example company IDs for staff
       }
       setUser(userData)
       localStorage.setItem('user', JSON.stringify(userData))
