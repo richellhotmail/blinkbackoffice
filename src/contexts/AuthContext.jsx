@@ -30,7 +30,8 @@ export function AuthProvider({ children }) {
         id: 1,
         username: 'admin',
         role: 'admin',
-        name: 'Administrator'
+        name: 'Administrator',
+        company: ['01', '02'] // Example company IDs for admin
       }
       setUser(userData)
       localStorage.setItem('user', JSON.stringify(userData))
@@ -40,7 +41,8 @@ export function AuthProvider({ children }) {
         id: 2,
         username: 'manager',
         role: 'manager',
-        name: 'Manager'
+        name: 'Manager',
+        company: ['01'] // Example company IDs for manager
       }
       setUser(userData)
       localStorage.setItem('user', JSON.stringify(userData))
@@ -50,7 +52,8 @@ export function AuthProvider({ children }) {
         id: 3,
         username: 'staff',
         role: 'staff',
-        name: 'Staff Member'
+        name: 'Staff Member',
+        company: ['01', '02'] // Example company IDs for staff
       }
       setUser(userData)
       localStorage.setItem('user', JSON.stringify(userData))

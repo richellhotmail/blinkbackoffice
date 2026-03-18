@@ -7,7 +7,7 @@ import { Plus } from 'lucide-react'
 
 function Products() {
   const { query, logAudit } = useDatabase()
-  const { user, hasPermission } = useAuth()
+  const { user, hasPermission, loading: authLoading } = useAuth()
   const [products, setProducts] = useState([])
   const [companies, setCompanies] = useState([])
   const [productGroups, setProductGroups] = useState([])
@@ -35,17 +35,28 @@ function Products() {
   const [codeError, setCodeError] = useState('')
 
   useEffect(() => {
-    loadData()
-  }, [])
+    if (!authLoading) loadData()
+  }, [authLoading, user])
 
   const loadData = async () => {
     try {
-      const [productsResult, companiesResult, productGroupsResult] = await Promise.all([
-        query(`SELECT p.*, c.company_short_desc, pg.prod_grp_short_desc 
+      // Build products query and filter by user's companies when not admin
+      let productsQuery = `SELECT p.*, c.company_short_desc, pg.prod_grp_short_desc 
                FROM products p 
                LEFT JOIN companies c ON p.company_code = c.company_code 
-               LEFT JOIN product_groups pg ON p.prod_grp_code = pg.prod_grp_code 
-               ORDER BY p.product_code`),
+               LEFT JOIN product_groups pg ON p.prod_grp_code = pg.prod_grp_code`
+
+      if (user && user.role !== 'admin') {
+        const companiesArr = Array.isArray(user.company) ? user.company : (user.company ? [user.company] : [])
+        if (companiesArr.length > 0) {
+          const companyList = companiesArr.map(c => `'${String(c).replace(/'/g, "''")}'`).join(', ')
+          productsQuery += ` WHERE p.company_code IN (${companyList})`
+        }
+      }
+      productsQuery += ` ORDER BY p.product_code`
+
+      const [productsResult, companiesResult, productGroupsResult] = await Promise.all([
+        query(productsQuery),
         query('SELECT * FROM companies WHERE enabled = 1 ORDER BY company_code'),
         query('SELECT * FROM product_groups WHERE enabled = 1 ORDER BY prod_grp_code')
       ])
